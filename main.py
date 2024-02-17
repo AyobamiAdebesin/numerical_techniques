@@ -20,7 +20,7 @@ import shutil
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
-from typing import Callable, Sequence, List, Tuple
+from typing import Callable, Sequence, List, Tuple, Mapping
 from collections import deque
 
 # Initialize mesh size list
@@ -181,7 +181,35 @@ def di_dt(t, v, i):
     """ Define the second function """
     return v
 
+def rate_of_decrease(last_values: List[Tuple]):
+    """ Compute the rate of decrease of error for the numerical methods """
+    results_df = pd.DataFrame(columns=['Step Size', 'Error', 'Rate of Decrease'])
+    prev_error = None
+    for j in range(len(last_values)):
+        error = np.abs(last_values[j][1] - np.cos(17))
+        rate_of_decrease = prev_error/error if prev_error else None
+            # Append the results to the DataFrame
+        new_data = pd.DataFrame({
+            'Step Size': [17/(2**(5+j))],
+            'Error': [error],
+            'Rate of Decrease': [rate_of_decrease]
+        })
+        results_df = pd.concat([results_df, new_data], ignore_index=True)
+        prev_error = error
+    return results_df
+
+
 if __name__ == "__main__":
+    # Initialize a DataFrame to store the results
+    results_df = pd.DataFrame(
+        columns=['Step Size', 'Error', 'Rate of Decrease'])
+    
+    last_values_adams_bashforth = []
+    last_values_euler = []
+    last_values_runge_kutta = []
+
+    # Initialize the previous error to None
+    prev_error = None
     for n in MESH_SIZES:
         print(
         f"=========== About to start iteration with step size: {str(17-0)}/{str(n)} ================\n")
@@ -212,6 +240,11 @@ if __name__ == "__main__":
         v_runge_kutta = v_values_r[-1]
         v_adams_bashforth = v_values_ab[-1]
 
+        last_values_adams_bashforth.append(ab_result[-1])
+        last_values_euler.append(euler_result[-1])
+        last_values_runge_kutta.append(rk_result[-1])
+
+
         # Compute cos(17)
         cos_17 = np.cos(17)
 
@@ -220,18 +253,18 @@ if __name__ == "__main__":
         error_runge_kutta = np.abs(v_runge_kutta - cos_17)
         error_adams_bashforth = np.abs(v_adams_bashforth - cos_17)
 
-        for method in ["Euler", "Runge-Kutta", "Adams-Bashforth"]:
-            plt.figure(figsize=(10,5))
-            plt.plot(time_values, v_values_map[method][0], label='v(t)')
-            plt.plot(time_values, v_values_map[method][1], label='i(t)')
-            #plt.plot(time_values, np.cos(time_values), 'x', label='True solution')
-            plt.xlabel('Time')
-            plt.ylabel('Solution')
-            plt.title(f'Graphical solution of the system of IVP by {method} method for i = {n}')
-            plt.legend()
-            plt.grid(True)
-            plt.savefig(f"result_{method}_{n}")
-            plt.show()
+        # for method in ["Euler", "Runge-Kutta", "Adams-Bashforth"]:
+        #     plt.figure(figsize=(10,5))
+        #     plt.plot(time_values, v_values_map[method][0], label='v(t)')
+        #     plt.plot(time_values, v_values_map[method][1], label='i(t)')
+        #     plt.plot(time_values, np.cos(time_values), 'x', label='True solution')
+        #     plt.xlabel('Time')
+        #     plt.ylabel('Solution')
+        #     plt.title(f'Graphical solution of the system of IVP by {method} method for i = {n}')
+        #     plt.legend()
+        #     plt.grid(True)
+        #     plt.savefig(f"result_{method}_{n}")
+        #     plt.show()
 
         # Create a DataFrame to display the results
         df = pd.DataFrame({
@@ -241,31 +274,17 @@ if __name__ == "__main__":
             'Error': [error_euler, error_runge_kutta, error_adams_bashforth]
         })
         print(df)
-        print("\n")
+        print("\n\n")
+    print("Rate of decrease in error for Euler's method")
+    print("============================================")
+    print(rate_of_decrease(last_values_euler))
+    print("\n\n")
+    print("Rate of decrease in error for Adams Bashforth method")
+    print("====================================================")
+    print(rate_of_decrease(last_values_adams_bashforth))
+    print("\n\n")
+    print("Rate of decrease in error for Runge Kutta method")
+    print("================================================")
+    print(rate_of_decrease(last_values_runge_kutta))
 
-    # Initialize a DataFrame to store the results
-    results_df = pd.DataFrame(
-        columns=['Step Size', 'Error', 'Rate of Decrease'])
-
-    # Initialize the previous error to None
-    prev_error = None
-    for method in ["Euler", "Runge-Kutta", "Adams-Bashforth"]:
-            
-            # Calculate the relative error
-            error = np.abs(np.cos(time_values[-1]) - v_values_map[method][0][-1])
-
-            # Calculate the rate of decrease
-            # Calculate the rate of decrease
-            rate_of_decrease = prev_error / error if prev_error is not None else None
-
-            # Append the results to the DataFrame
-            new_data = pd.DataFrame({
-                'Step Size': [17/n],
-                'Error': [error],
-                'Rate of Decrease': [rate_of_decrease]
-            })
-            results_df = pd.concat([results_df, new_data], ignore_index=True)
-
-            # Update the previous error
-            prev_error = error
-    print(results_df)
+    
