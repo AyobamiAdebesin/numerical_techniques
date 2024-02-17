@@ -11,7 +11,7 @@ Usage:
     python3 main.py (./main.py on a unix system)
 
     If you are running this code on a jupyter notebook, you can uncomment
-    lines 230-241 to visualize the results
+    lines 261-272 to visualize the results
 
 """
 import numpy as np
