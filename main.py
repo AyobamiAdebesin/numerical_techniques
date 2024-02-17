@@ -207,10 +207,6 @@ def rate_of_decrease(last_values: List[Tuple]):
 
 
 if __name__ == "__main__":
-    # Initialize a DataFrame to store the results
-    results_df = pd.DataFrame(
-        columns=['Step Size', 'Error', 'Rate of Decrease'])
-
     last_values_adams_bashforth = []
     last_values_euler = []
     last_values_runge_kutta = []
