@@ -122,6 +122,7 @@ def runge_kutta(
     assert len(approx_sol) == N+1, "solution out of range!"
     return approx_sol
 
+
 def adams_bashforth(
         dv_dt: Callable,
         di_dt: Callable,
@@ -148,22 +149,24 @@ def adams_bashforth(
     if not interval[0] < interval[1]:
         raise ValueError("interval must be ordered")
     if len(initial_points) != 4 or not all(isinstance(x, tuple) for x in initial_points) or not all(len(x) == 3 for x in initial_points):
-        raise ValueError("initial points must contain a tuple (t, v, i) of 4 points")
+        raise ValueError(
+            "initial points must contain a tuple (t, v, i) of 4 points")
 
     a = interval[0]
     b = interval[1]
     approx_sol = initial_points
-    curr_point = deque(initial_points) # A deque to keep track of the last 4 points for each iteration
+    # A deque to keep track of the last 4 points for each iteration
+    curr_point = deque(initial_points)
     h = np.abs((b - a) / N)
     t0 = a + 3*h
     for j in range(N - 3):
         v = curr_point[3][1] + h/24*(55*dv_dt(curr_point[3][0], curr_point[3][1], curr_point[3][2])
-                                     - 59*dv_dt(curr_point[2][0], curr_point[2][1], curr_point[2][2])
-                                     + 37*dv_dt(curr_point[1][0], curr_point[1][1], curr_point[1][2])
+                                     - 59 *dv_dt(curr_point[2][0], curr_point[2][1], curr_point[2][2])
+                                     + 37 *dv_dt(curr_point[1][0], curr_point[1][1], curr_point[1][2])
                                      - 9*dv_dt(curr_point[0][0], curr_point[0][1], curr_point[0][2]))
         i = curr_point[3][2] + h/24*(55*di_dt(curr_point[3][0], curr_point[3][1], curr_point[3][2])
-                                     - 59*di_dt(curr_point[2][0], curr_point[2][1], curr_point[2][2])
-                                     + 37*di_dt(curr_point[1][0], curr_point[1][1], curr_point[1][2])
+                                     - 59 *di_dt(curr_point[2][0], curr_point[2][1], curr_point[2][2])
+                                     + 37 *di_dt(curr_point[1][0], curr_point[1][1], curr_point[1][2])
                                      - 9*di_dt(curr_point[0][0], curr_point[0][1], curr_point[0][2]))
         curr_point.popleft()
         t0 += h
@@ -172,6 +175,8 @@ def adams_bashforth(
     return approx_sol
 
 # Define the system of equations
+
+
 def dv_dt(t, v, i):
     """ Define the first function """
     return -i
@@ -181,14 +186,16 @@ def di_dt(t, v, i):
     """ Define the second function """
     return v
 
+
 def rate_of_decrease(last_values: List[Tuple]):
     """ Compute the rate of decrease of error for the numerical methods """
-    results_df = pd.DataFrame(columns=['Step Size', 'Error', 'Rate of Decrease'])
+    results_df = pd.DataFrame(
+        columns=['Step Size', 'Error', 'Rate of Decrease'])
     prev_error = None
     for j in range(len(last_values)):
         error = np.abs(last_values[j][1] - np.cos(17))
         rate_of_decrease = prev_error/error if prev_error else None
-            # Append the results to the DataFrame
+        # Append the results to the DataFrame
         new_data = pd.DataFrame({
             'Step Size': [17/(2**(5+j))],
             'Error': [error],
@@ -203,7 +210,7 @@ if __name__ == "__main__":
     # Initialize a DataFrame to store the results
     results_df = pd.DataFrame(
         columns=['Step Size', 'Error', 'Rate of Decrease'])
-    
+
     last_values_adams_bashforth = []
     last_values_euler = []
     last_values_runge_kutta = []
@@ -212,13 +219,16 @@ if __name__ == "__main__":
     prev_error = None
     for n in MESH_SIZES:
         print(
-        f"=========== About to start iteration with step size: {str(17-0)}/{str(n)} ================\n")
-        euler_result = euler_method(dv_dt, di_dt, interval=[0, 17], N=n, v0=1, i0=0)
-        rk_result = runge_kutta(dv_dt, di_dt, interval=[0, 17], N=n, v0=1, i0=0)
-        
+            f"=========== About to start iteration with step size: {str(17-0)}/{str(n)} ================\n")
+        euler_result = euler_method(dv_dt, di_dt, interval=[
+                                    0, 17], N=n, v0=1, i0=0)
+        rk_result = runge_kutta(dv_dt, di_dt, interval=[
+                                0, 17], N=n, v0=1, i0=0)
+
         # Use the first 4 points for the Runge Kutta method as  starting point for Adams Bashforth
         initial_points = rk_result[:4]
-        ab_result = adams_bashforth(dv_dt, di_dt, interval=[0, 17], N=n, initial_points=initial_points)
+        ab_result = adams_bashforth(dv_dt, di_dt, interval=[
+                                    0, 17], N=n, initial_points=initial_points)
 
         # Extract the time, v, and i values for each method
         time_values = [t for t, _, _ in euler_result]
@@ -243,7 +253,6 @@ if __name__ == "__main__":
         last_values_adams_bashforth.append(ab_result[-1])
         last_values_euler.append(euler_result[-1])
         last_values_runge_kutta.append(rk_result[-1])
-
 
         # Compute cos(17)
         cos_17 = np.cos(17)
@@ -286,5 +295,3 @@ if __name__ == "__main__":
     print("Rate of decrease in error for Runge Kutta method")
     print("================================================")
     print(rate_of_decrease(last_values_runge_kutta))
-
-    
