@@ -49,7 +49,7 @@ def euler_method(
         A list of tuples containing the the ordered pair (t, v, i)  for each time step in `interval` 
     """
     # Input validation
-    if len(interval) != 2:
+    if len(interval) != 2 or not all(isinstance(x, int) for x in interval):
         raise ValueError("interval must be a pair of integers")
     if not interval[0] < interval[1]:
         raise ValueError("interval must be ordered")
@@ -207,87 +207,89 @@ def rate_of_decrease(last_values: List[Tuple]):
 
 
 if __name__ == "__main__":
-    last_values_adams_bashforth = []
-    last_values_euler = []
-    last_values_runge_kutta = []
+    interval = [0, 17]
+    try:
+        last_values_adams_bashforth = []
+        last_values_euler = []
+        last_values_runge_kutta = []
 
-    # Initialize the previous error to None
-    prev_error = None
-    for n in MESH_SIZES:
-        print(
-            f"=========== About to start iteration with step size: {str(17-0)}/{str(n)} ================\n")
-        euler_result = euler_method(dv_dt, di_dt, interval=[
-                                    0, 17], N=n, v0=1, i0=0)
-        rk_result = runge_kutta(dv_dt, di_dt, interval=[
-                                0, 17], N=n, v0=1, i0=0)
+        for n in MESH_SIZES:
+            print(
+                f"=========== About to start iteration with step size: {str(17-0)}/{str(n)} ================\n")
+            euler_result = euler_method(
+                dv_dt, di_dt, interval=interval, N=n, v0=1, i0=0)
+            rk_result = runge_kutta(
+                dv_dt, di_dt, interval=interval, N=n, v0=1, i0=0)
 
-        # Use the first 4 points for the Runge Kutta method as  starting point for Adams Bashforth
-        initial_points = rk_result[:4]
-        ab_result = adams_bashforth(dv_dt, di_dt, interval=[
-                                    0, 17], N=n, initial_points=initial_points)
+            # Use the first 4 points for the Runge Kutta method as  starting point for Adams Bashforth
+            initial_points = rk_result[:4]
+            ab_result = adams_bashforth(
+                dv_dt, di_dt, interval=interval, N=n, initial_points=initial_points)
 
-        # Extract the time, v, and i values for each method
-        time_values = [t for t, _, _ in euler_result]
-        v_values_e = [v for _, v, _ in euler_result]
-        i_values_e = [i for _, _, i in euler_result]
-        v_values_r = [v for _, v, _ in rk_result]
-        i_values_r = [i for _, _, i in rk_result]
-        v_values_ab = [v for _, v, _ in ab_result]
-        i_values_ab = [i for _, _, i in ab_result]
+            # Extract the time, v, and i values for each method
+            time_values = [t for t, _, _ in euler_result]
+            v_values_e = [v for _, v, _ in euler_result]
+            i_values_e = [i for _, _, i in euler_result]
+            v_values_r = [v for _, v, _ in rk_result]
+            i_values_r = [i for _, _, i in rk_result]
+            v_values_ab = [v for _, v, _ in ab_result]
+            i_values_ab = [i for _, _, i in ab_result]
 
-        v_values_map = {
-            "Euler": (v_values_e, i_values_e),
-            "Runge-Kutta": (v_values_r, i_values_r),
-            "Adams-Bashforth": (v_values_ab, i_values_ab)
-        }
+            v_values_map = {
+                "Euler": (v_values_e, i_values_e),
+                "Runge-Kutta": (v_values_r, i_values_r),
+                "Adams-Bashforth": (v_values_ab, i_values_ab)
+            }
 
-        # Extract v(17) for each method
-        v_euler = v_values_e[-1]
-        v_runge_kutta = v_values_r[-1]
-        v_adams_bashforth = v_values_ab[-1]
+            # Extract v(17) for each method
+            v_euler = v_values_e[-1]
+            v_runge_kutta = v_values_r[-1]
+            v_adams_bashforth = v_values_ab[-1]
 
-        last_values_adams_bashforth.append(ab_result[-1])
-        last_values_euler.append(euler_result[-1])
-        last_values_runge_kutta.append(rk_result[-1])
+            last_values_adams_bashforth.append(ab_result[-1])
+            last_values_euler.append(euler_result[-1])
+            last_values_runge_kutta.append(rk_result[-1])
 
-        # Compute cos(17)
-        cos_17 = np.cos(17)
+            # Compute cos(17)
+            cos_17 = np.cos(17)
 
-        # Compute the error for each method
-        error_euler = np.abs(v_euler - cos_17)
-        error_runge_kutta = np.abs(v_runge_kutta - cos_17)
-        error_adams_bashforth = np.abs(v_adams_bashforth - cos_17)
+            # Compute the error for each method
+            error_euler = np.abs(v_euler - cos_17)
+            error_runge_kutta = np.abs(v_runge_kutta - cos_17)
+            error_adams_bashforth = np.abs(v_adams_bashforth - cos_17)
 
-        # for method in ["Euler", "Runge-Kutta", "Adams-Bashforth"]:
-        #     plt.figure(figsize=(10,5))
-        #     plt.plot(time_values, v_values_map[method][0], label='v(t)')
-        #     plt.plot(time_values, v_values_map[method][1], label='i(t)')
-        #     plt.plot(time_values, np.cos(time_values), 'x', label='True solution')
-        #     plt.xlabel('Time')
-        #     plt.ylabel('Solution')
-        #     plt.title(f'Graphical solution of the system of IVP by {method} method for i = {n}')
-        #     plt.legend()
-        #     plt.grid(True)
-        #     plt.savefig(f"result_{method}_{n}")
-        #     plt.show()
+            # for method in ["Euler", "Runge-Kutta", "Adams-Bashforth"]:
+            #     plt.figure(figsize=(10,5))
+            #     plt.plot(time_values, v_values_map[method][0], label='v(t)')
+            #     plt.plot(time_values, v_values_map[method][1], label='i(t)')
+            #     plt.plot(time_values, np.cos(time_values), 'x', label='True solution')
+            #     plt.xlabel('Time')
+            #     plt.ylabel('Solution')
+            #     plt.title(f'Graphical solution of the system of IVP by {method} method for i = {n}')
+            #     plt.legend()
+            #     plt.grid(True)
+            #     plt.savefig(f"result_{method}_{n}")
+            #     plt.show()
 
-        # Create a DataFrame to display the results
-        df = pd.DataFrame({
-            'Method': ['Euler', 'Runge-Kutta', 'Adams-Bashforth'],
-            'v(17)': [v_euler, v_runge_kutta, v_adams_bashforth],
-            'cos(17)': [cos_17, cos_17, cos_17],
-            'Error': [error_euler, error_runge_kutta, error_adams_bashforth]
-        })
-        print(df)
+            # Create a DataFrame to display the results
+            df = pd.DataFrame({
+                'Method': ['Euler', 'Runge-Kutta', 'Adams-Bashforth'],
+                'v(17)': [v_euler, v_runge_kutta, v_adams_bashforth],
+                'cos(17)': [cos_17, cos_17, cos_17],
+                'Error': [error_euler, error_runge_kutta, error_adams_bashforth]
+            })
+            print(df)
+            print("\n\n")
+        print("Rate of decrease in error for Euler's method")
+        print("============================================")
+        print(rate_of_decrease(last_values_euler))
         print("\n\n")
-    print("Rate of decrease in error for Euler's method")
-    print("============================================")
-    print(rate_of_decrease(last_values_euler))
-    print("\n\n")
-    print("Rate of decrease in error for Adams Bashforth method")
-    print("====================================================")
-    print(rate_of_decrease(last_values_adams_bashforth))
-    print("\n\n")
-    print("Rate of decrease in error for Runge Kutta method")
-    print("================================================")
-    print(rate_of_decrease(last_values_runge_kutta))
+        print("Rate of decrease in error for Adams Bashforth method")
+        print("====================================================")
+        print(rate_of_decrease(last_values_adams_bashforth))
+        print("\n\n")
+        print("Rate of decrease in error for Runge Kutta method")
+        print("================================================")
+        print(rate_of_decrease(last_values_runge_kutta))
+    except Exception as e:
+        print(f"{e.__class__.__name__}: {e}")
