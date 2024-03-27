@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 """
 This script contains the implementation of Cholesky Factorization of positive definite matrix,
-Gauss-Seidel iteraive method for solving a system of linear equations
+Gauss-Seidel iteraive method for solving a system of linear equations. These implementations
+follow from the pseudocode algorithms from the textbook.
 
 Author: Ayobami Adebesin
 Date: 3-29-2024
 
 Usage:
-    python3 cholesky_factorization.py (./cholesky_factorization.py on a unix system)
+    python3 main.py (./main.py on a unix system)
 
 """
 import os
@@ -32,8 +33,8 @@ def backward_substitution(A: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     if A.shape[0] != A.shape[1]:
         raise ValueError("A must be a square matrix")
-    # if b.shape[0] != A.shape[1] or b.shape[1] != 1:
-    #     raise ValueError(f"b must be a {A.shape[1]}x{1} vector!")
+    if b.shape[0] != A.shape[0]:
+        raise ValueError(f"b must be a ({A.shape[0]}, ) vector!")
     x = np.zeros((A.shape[0], ))
     n = A.shape[0] - 1
     x[n] = b[n]/A[n, n]
@@ -58,6 +59,8 @@ def forward_substitution(A: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     if A.shape[0] != A.shape[1]:
         raise ValueError("A must be a square matrix")
+    if b.shape[0] != A.shape[0]:
+        raise ValueError(f"b must be a ({A.shape[0]}, ) vector!")
     x = np.zeros((A.shape[0], 1))
     n = A.shape[0]
     x[0] = b[0]/A[0, 0]
@@ -70,11 +73,9 @@ def forward_substitution(A: np.ndarray, b: np.ndarray) -> np.ndarray:
 
 
 def is_positive_definite(A: np.ndarray) -> bool:
-    """Check if a matrix is positive definite using the eigenvalue property """
+    """ Check if a matrix is positive definite using the eigenvalue property """
     if A is not None:
         return np.all(np.linalg.eigvals(A) > 0)
-    else:
-        return ValueError("A must not be None")
 
 
 def cholesky_factorization(A: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -87,8 +88,14 @@ def cholesky_factorization(A: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     Return:
         The lower triangular matrix L of the decomposition and its transpose L.T
     """
+    # Input validation
     if A.shape[0] != A.shape[1]:
         raise ValueError("A must be a square matrix")
+
+    # Check for positive definiteness of A
+    if is_positive_definite(A) == False:
+        raise ValueError("A must be positive definite")
+
     n = A.shape[0]
     L = np.zeros_like(A)
 
@@ -129,9 +136,21 @@ def cholesky_solver(A: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, float]:
 
 
 def crout_factorization_tridiagonal(A: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """ Factorize a tridiagonal matrix using Crout factorization """
+    """
+    Factorize a tridiagonal matrix using Crout factorization
+
+    Args:
+        A (np.ndarray): nxn tridiagonal matrix over R
+        b (np.ndarray): nx1 vector b
+
+    Return:
+        The solution to the system Ax=b
+    """
+    # Input validation
     if A.shape[0] != A.shape[1]:
         raise ValueError("A must be a square matrix")
+    if b.shape[0] != A.shape[0]:
+        raise ValueError(f"b must be a ({A.shape[0]}, ) vector!")
     n = A.shape[0]
     L = np.zeros((n, n))
     U = np.zeros((n, n))
@@ -157,8 +176,16 @@ def crout_factorization_tridiagonal(A: np.ndarray, b: np.ndarray) -> np.ndarray:
     return x
 
 
-def create_tridiagonal_matrix(n):
-    """ Generate the entries of a tridiagonal matrix A"""
+def create_tridiagonal_matrix(n: int) -> np.ndarray:
+    """
+    Generate the entries of a tridiagonal matrix A
+        
+    Args:
+        n (int): size of the matrix
+
+    Return:
+        The matrix A
+    """
     A = np.zeros((n, n))
 
     # Fill the diagonal with 2s
@@ -171,8 +198,16 @@ def create_tridiagonal_matrix(n):
     return A
 
 
-def create_vector(n):
-    """ Generate the entries of vector B"""
+def create_vector(n: int) -> np.ndarray:
+    """
+    Generate the entries of vector b
+        
+    Args:
+        n (int): size of the vector
+
+    Return:
+        The vector b
+    """
     b = np.zeros((n, ))
     for i in range(n):
         if i == 0:
@@ -199,8 +234,11 @@ def gauss_seidel(A: np.ndarray, b: np.ndarray, x0: np.ndarray, tol: float, N: in
         x_old = np.copy(x)
 
         for i in range(n):
+
+            # Without exploiting the band structure of A
             # sum1 = sum(A[i][j] * x[j] for j in range(i))
             # sum2 = sum(A[i][j] * x_old[j] for j in range(i+1, n))
+            
             sum1 = A[i][i-1] * x[i-1] if i > 0 else 0
             sum2 = A[i][i+1] * x_old[i+1] if i < n-1 else 0
             x[i] = (b[i] - sum1 - sum2) / A[i][i]
