@@ -10,12 +10,13 @@ from numpy.linalg import norm
 import matplotlib.pyplot as plt
 from typing import Union, Sequence, List, Tuple
 from scipy.sparse import diags
+from scipy.sparse.linalg import eigsh
 
 
-def is_positive_definite(A: np.ndarray) -> bool:
+def is_positive_definite(A):
     """ Check if a matrix is positive definite using the eigenvalue property """
     if A is not None:
-        return np.all(np.linalg.eigvals(A) > 0)
+        return np.all(eigsh(A, k=1, which='SA')[0] > 0)
 
 
 # def create_tridiagonal_matrix(n: int, diag_elem: int) -> np.ndarray:
@@ -95,9 +96,14 @@ def conjugate_gradient(A, b, x0, tolerance, max_iterations) -> Tuple[np.ndarray,
         The solution x, the number of iterations and the final residual
 
     """
+    #NOTE I commented this check because I realized that it is time
+    # consuming and makes the algorithm slower despite using a sparse matrix
+    # and the matrix is already positive definite by nature of the problem.
+
     # Check for positive definiteness of A
-    if is_positive_definite(A.toarray()) == False:
-        raise ValueError("A must be positive definite")
+    # if is_positive_definite(A.toarray()) == False:
+    #     raise ValueError("A must be positive definite")
+
     n = b.shape[0]
     if x0 is None:
         x0 = np.zeros(n)
@@ -130,7 +136,7 @@ if __name__ == "__main__":
     tol = 1e-8
     max_iterations = 5000
     for n in MATRIX_SIZES:
-        print(f"Running program for system A with matrix size n = {n}\n")
+        print(f"Running program for system A with matrix size n = {n} ...\n")
 
         # Initialize matrix and vectors
         A = create_tridiagonal_matrix(n=n, diag_elem=2)
@@ -144,7 +150,6 @@ if __name__ == "__main__":
             A, b, x0=x0, tolerance=tol, max_iterations=max_iterations)
         y, k_prime, r_norm_prime = conjugate_gradient(
             A_prime, b, x0=y0, tolerance=tol, max_iterations=max_iterations)
-        
         # Store the results
         results.append((n, k, r_norm))
         results_prime.append((n, k_prime, r_norm_prime))
@@ -152,7 +157,6 @@ if __name__ == "__main__":
     # Display the results
     df = pd.DataFrame(results, columns=[
                       "Matrix Size", "Iterations", "Residual"])
-    print("\nResults for Ay=3b\n")
     df_prime = pd.DataFrame(results_prime, columns=[
                             "Matrix Size", "Iterations", "Residual"])
     print("Results for Ax=b\n====================================")
