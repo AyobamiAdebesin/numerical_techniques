@@ -1,6 +1,19 @@
 #!/usr/bin/python3
 
-""" Conjugate Gradient Descent """
+"""
+Conjugate Gradient Method
+
+This script contains the implementation of Conjugate Gradient Method
+for solving a system of linear equations. This implementation
+follow from the pseudocode algorithm from the lecture notebook.
+
+Author: Ayobami Adebesin
+Date: 4-17-2024
+
+Usage:
+    python3 main.py (./main.py on a unix system)
+
+"""
 
 import os
 import time
@@ -10,10 +23,11 @@ from numpy.linalg import norm
 import matplotlib.pyplot as plt
 from typing import Union, Sequence, List, Tuple
 from scipy.sparse import diags
+from scipy.sparse import dia_matrix
 from scipy.sparse.linalg import eigsh
 
 
-def is_positive_definite(A):
+def is_positive_definite(A) -> bool:
     """ Check if a matrix is positive definite using the eigenvalue property """
     if A is not None:
         return np.all(eigsh(A, k=1, which='SA')[0] > 0)
@@ -41,7 +55,7 @@ def is_positive_definite(A):
 
 #     return A
 
-def create_tridiagonal_matrix(n, diag_elem):
+def create_tridiagonal_matrix(n, diag_elem) -> dia_matrix:
     """
     Create a tridiagonal matrix of size n x n, with diag_elem on the diagonal and -1 on the off-diagonals.
     This method was used instead of the previous one to generate a sparse matrix.
@@ -98,7 +112,8 @@ def conjugate_gradient(A, b, x0, tolerance, max_iterations) -> Tuple[np.ndarray,
     """
     #NOTE I commented this check because I realized that it is time
     # consuming and makes the algorithm slower despite using a sparse matrix
-    # and the matrix is already positive definite by nature of the problem.
+    # It is not that important for this problem since the matrix is already positive
+    # definite by nature of the problem.
 
     # Check for positive definiteness of A
     # if is_positive_definite(A.toarray()) == False:
@@ -150,6 +165,7 @@ if __name__ == "__main__":
             A, b, x0=x0, tolerance=tol, max_iterations=max_iterations)
         y, k_prime, r_norm_prime = conjugate_gradient(
             A_prime, b, x0=y0, tolerance=tol, max_iterations=max_iterations)
+        
         # Store the results
         results.append((n, k, r_norm))
         results_prime.append((n, k_prime, r_norm_prime))
@@ -161,7 +177,7 @@ if __name__ == "__main__":
                             "Matrix Size", "Iterations", "Residual"])
     print("Results for Ax=b\n====================================")
     print(df)
-    print("\nResults for Ay=b\n====================================")
+    print("\nResults for A`y=b\n====================================")
     print(df_prime)
     print("\nDone running the program for all matrix sizes!\n")
 
