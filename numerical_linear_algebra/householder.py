@@ -182,7 +182,7 @@ def main():
     print(f"Error at pi: {pi_error}")
 
     # Plot the approximation
-    x_vals = np.linspace(-4, 4, 21)
+    x_vals = np.linspace(-4, 4, 100)
     p_vals = evaluate_polynomial(c, x_vals)
     plt.plot(x_vals, p_vals, label="Polynomial Approximation")
     plt.plot(x_vals, np.sin(x_vals), label="sin(x)", linestyle="dashed")
