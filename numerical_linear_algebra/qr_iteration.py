@@ -8,7 +8,7 @@ Author: Ayobami Adebesin
 Date: 09-11-2024
 
 Usage:
-    python3 householder.py (./qr_iteration.py on a unix system)
+    python3 qr_iteration.py (./qr_iteration.py on a unix system)
     
 """
 import numpy as np
@@ -44,7 +44,7 @@ def create_tridiagonal_matrix(m: int, diag_value: float=2.0, off_diag_value: flo
         A[i+1, i] = off_diag_value
     return A
 
-def check_diagonal(T:np.ndarray) -> bool:
+def check_diagonal(T: np.ndarray) -> bool:
     """ Check if T is diagonal """
     return np.all(np.diag(np.diag(T)) == T)
 
