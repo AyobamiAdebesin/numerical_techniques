@@ -5,7 +5,7 @@ algorithm, using the Wilkinson shift, for solving an eigenvalue problem for a tr
 The implementation follows from the provided pseudocode in the problem description
 
 Author: Ayobami Adebesin
-Date: 08-11-2024
+Date: 09-11-2024
 
 Usage:
     python3 householder.py (./qr_iteration.py on a unix system)
@@ -22,7 +22,7 @@ def wilkinson_shift(a: float, b: float, c: float) -> float:
     """
     delta = (a - c) / 2
     sign_delta = np.sign(delta) if delta != 0 else 1
-    mu = c - (sign_delta * b**2) / (np.abs(sign_delta) + np.sqrt(sign_delta**2 + b**2))
+    mu = c - (sign_delta * b**2) / (np.abs(delta) + np.sqrt(delta**2 + b**2))
     return mu
 
 def householder_vector(x: np.ndarray) -> np.ndarray:
@@ -49,7 +49,7 @@ def check_diagonal(T:np.ndarray) -> bool:
     return np.all(np.diag(np.diag(T)) == T)
 
 def tridiagonal_qr_iteration(T: np.ndarray, tol=1e-16):
-    """ Compute the explicitly shifted qr iteration """
+    """ Compute the explicitly shifted QR iteration """
     m = T.shape[0]
     l = m - 1
     Q = np.eye(m)
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         approx_eigenvalues = D
 
         # compute errors
-        relative_backward_error = np.linalg.norm(Q @ D @ Q.T - A, ord=np.inf) / np.linalg.norm(A, ord=np.inf)
+        relative_backward_error = np.linalg.norm(Q @ np.diag(D) @ Q.T - A, ord=np.inf) / np.linalg.norm(A, ord=np.inf)
         orthogonality_error = np.linalg.norm(Q.T @ Q - np.eye(m), ord=np.inf)
         forward_errors = np.abs(approx_eigenvalues - exact_eigenvalues)
 
