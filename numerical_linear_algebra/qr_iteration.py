@@ -101,12 +101,14 @@ if __name__ == "__main__":
         m = 10
         A = create_tridiagonal_matrix(m, diag_value= 2.0, off_diag_value=-1.0)
         Q, D, iter_cnt = tridiagonal_qr_iteration(A)
+        
 
         exact_eigenvalues = np.array([2 - 2 * np.cos(np.pi * k / (m + 1)) for k in range(1, m + 1)])
-        approx_eigenvalues = D
+        approx_eigenvalues = np.sort(D)
+    
 
         # compute errors
-        relative_backward_error = np.linalg.norm(Q @ np.diag(D) @ Q.T - A, ord=np.inf) / np.linalg.norm(A, ord=np.inf)
+        relative_backward_error = np.linalg.norm((Q @ approx_eigenvalues @ Q.T) - A, ord=np.inf) / np.linalg.norm(A, ord=np.inf)
         orthogonality_error = np.linalg.norm(Q.T @ Q - np.eye(m), ord=np.inf)
         forward_errors = np.abs(approx_eigenvalues - exact_eigenvalues)
 
