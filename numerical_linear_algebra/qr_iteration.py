@@ -5,13 +5,14 @@ algorithm, using the Wilkinson shift, for solving an eigenvalue problem for a tr
 The implementation follows from the provided pseudocode in the problem description
 
 Author: Ayobami Adebesin
-Date: 09-11-2024
+Date: 11-11-2024
 
 Usage:
     python3 qr_iteration.py (./qr_iteration.py on a unix system)
     
 """
 import numpy as np
+import sys
 
 def wilkinson_shift(a: float, b: float, c: float) -> float:
     """
@@ -51,47 +52,48 @@ def check_diagonal(T: np.ndarray) -> bool:
 def tridiagonal_qr_iteration(T: np.ndarray, tol=1e-16):
     """ Compute the explicitly shifted QR iteration """
     m = T.shape[0]
+    T0 = T.copy()
     l = m - 1
     Q = np.eye(m)
     W = np.zeros((2, m-1))
     iter_cnt = 0
     while l > 0:
         iter_cnt += 1
-        if np.abs(T[l, l-1]) < tol:
+        if np.abs(T0[l, l-1]) < tol:
             # deflate and work on a smaller problem
-            T[l, l-1] = 0
-            T[l-1, l] = 0
+            T0[l, l-1] = 0
+            T0[l-1, l] = 0
             l -= 1
             continue
         # compute wilkinson shift
-        sigma = wilkinson_shift(a = T[l-1, l-1], b = T[l, l-1], c= T[l, l])
-        T -= sigma * np.eye(m)
+        sigma = wilkinson_shift(a = T0[l-1, l-1], b = T0[l, l-1], c= T0[l, l])
+        T0 -= sigma * np.eye(m)
 
         for j in range(l):
             # extract the column x from T
-            x = T[j: j+2, j]      
+            x = T0[j: j+2, j]      
             v = householder_vector(x)
             W[:, j] = v
             
             # apply householder to T from the left
             H = np.eye(2) - 2 *np.outer(v, v)
-            T[j:j+2, j:j+3] = H @ T[j:j+2, j:j+3]
-            T[j+1, j] = 0
+            T0[j:j+2, j:j+3] = H @ T0[j:j+2, j:j+3]
+            T0[j+1, j] = 0
 
             # apply householder to Q from the right
             Q[:, j:j+2] = Q[:, j:j+2] @ H
         for j in range(l):
             v = W[:, j]
             H = np.eye(2) - 2 * np.outer(v, v)
-            T[max(0, j - 1):j + 2, j:j+2] = T[max(0, j - 1):j + 2, j:j+2] @ H
+            T0[max(0, j - 1):j + 2, j:j+2] = T0[max(0, j - 1):j + 2, j:j+2] @ H
             if j - 1 >= 0:
-                T[j - 1, j + 1] = 0
+                T0[j - 1, j + 1] = 0
 
-        T += sigma * np.eye(m)
+        T0 += sigma * np.eye(m)
     
     # check if T is diagonal
-    if check_diagonal(T):
-        return Q, np.diag(T), iter_cnt
+    if check_diagonal(T0):
+        return Q, np.diag(T0), iter_cnt
     else:
         raise ValueError("Error occured! T is not diagonal.")
 
@@ -100,15 +102,17 @@ if __name__ == "__main__":
     try:
         m = 10
         A = create_tridiagonal_matrix(m, diag_value= 2.0, off_diag_value=-1.0)
+        print(f"A before iteration {A}")
         Q, D, iter_cnt = tridiagonal_qr_iteration(A)
-        
+        print(f"A after iteration: {A}")
 
         exact_eigenvalues = np.array([2 - 2 * np.cos(np.pi * k / (m + 1)) for k in range(1, m + 1)])
+        # sort the approximate eigenvalues and get the sorting indices
         approx_eigenvalues = np.sort(D)
-    
 
         # compute errors
-        relative_backward_error = np.linalg.norm((Q @ approx_eigenvalues @ Q.T) - A, ord=np.inf) / np.linalg.norm(A, ord=np.inf)
+        #print(A)
+        relative_backward_error = np.linalg.norm(Q @ np.diag(D) @ Q.T - A, ord=np.inf) / np.linalg.norm(A, ord=np.inf)
         orthogonality_error = np.linalg.norm(Q.T @ Q - np.eye(m), ord=np.inf)
         forward_errors = np.abs(approx_eigenvalues - exact_eigenvalues)
 
@@ -119,3 +123,4 @@ if __name__ == "__main__":
         print("Total Iterations:", iter_cnt)
     except ValueError as e:
         print(f"{e}")
+        sys.exit(1)

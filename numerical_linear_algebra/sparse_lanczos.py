@@ -6,7 +6,7 @@ for finding the eigenvalues of sparse matrix near a shift. This implementation f
 from the pseudocode algorithm from the lecture notebook.
 
 Author: Ayobami Adebesin
-Date: 25th November 2024
+Date: 4th December 2024
 
 Usage:
     python3 sparse_lanczos.py --reortho --refine
@@ -23,7 +23,6 @@ import numpy as np
 import scipy.sparse as sp
 import argparse
 from scipy.sparse import csr_matrix
-from qr_iteration import create_tridiagonal_matrix
 from typing import Callable, List, Sequence, Tuple
 from collections import Counter
 

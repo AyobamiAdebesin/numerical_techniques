@@ -57,7 +57,7 @@ def lanczos(A, m, b=None):
             # Orthogonalize v against the current Lanczos vector
             v = v - (beta_prev * q_prev) - (alpha * q_curr)
 
-            # Reorthogonalization (optional)
+            # Reorthogonalization
             v -= Q_m_plus_1[:, :j+1] @ (Q_m_plus_1[:, :j+1].T @ v)
 
             # Compute beta
@@ -88,7 +88,7 @@ def lanczos(A, m, b=None):
     np.fill_diagonal(T_m_tilde[1:, :m - 1], betas[:m - 1])
 
     # Add the last beta_n for q_{n+1}
-    T_m_tilde[m, m - 1] = betas[m - 1] if m > 1 else betas[0]
+    T_m_tilde[m, m - 1] = betas[m - 1] if m > 1 else betas[0] 
 
     # Return the first m Lanczos vectors (Q_m), the first m+1 Lanczos vectors (Q_{m+1}),
     # the tridiagonal matrix T_m, and the extended tridiagonal matrix T_m tilde.
@@ -112,7 +112,7 @@ def compute_eigenvalues_and_vectors(A: np.ndarray, m: int) -> Sequence:
     # Perform Lanczos iteration to get T_m and V_m
     T_m, T_m_tilde, Q_m, Q_m_plus_1 = lanczos(A, m)
     
-    test_accuracy(A, Q_m, Q_m_plus_1, T_m_tilde)
+    #test_accuracy(A, Q_m, Q_m_plus_1, T_m_tilde)
 
     # Solve the eigenvalue problem for the tridiagonal matrix T_m
     eigvals_Tm, eigvecs_Tm = np.linalg.eigh(T_m)
@@ -173,11 +173,11 @@ def test_accuracy(A, Q_m, Q_m_plus_1, T_m_tilde):
     rhs = Q_m_plus_1 @ T_m_tilde
 
     diff = np.linalg.norm(lhs - rhs)
-    print(f"Accuracy test: {diff}")
+    #print(f"Accuracy test: {diff}")
     return
     
 
-def generate_matrix_sample():
+def generate_matrix():
     diagonal_values  = np.arange(0, 2.01, 0.01)
     diagonal_values = np.append(diagonal_values, [2.5, 3.0])
     assert len(diagonal_values) == 203, "Diagonal values must be 203"
@@ -188,9 +188,9 @@ def generate_matrix_sample():
 if __name__ == "__main__":
     #matrix_A = sio.mmread("./matrix_market/bcsstk11.mtx")
     #A = matrix_A.toarray()
-    A = random_symmetric_matrix(2000, density=0.01).toarray()
+    #A = random_symmetric_matrix(2000, density=0.01).toarray()
     
-    #A = generate_matrix_sample()
+    A = generate_matrix()
     A[0, 0] = -10
     print(f"Matrix A: {A.shape}")
 
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     m = 20
 
     eigenvalues, eigenvectors = compute_eigenvalues_and_vectors(A, m)
-    print(eigenvalues)
+    print(f"\nEigenvalues: {eigenvalues}")
     rel_residual = relative_ritz_pair_residual(A, eigenvalues, eigenvectors)
     print(f"Relative Ritz pair residual: {rel_residual}")
     
